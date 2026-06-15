@@ -38,5 +38,6 @@ module App
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+    config.require_master_key = true
   end
 end
