@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_05_064449) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_16_000000) do
   create_table "album_artists", force: :cascade do |t|
     t.integer "album_id", null: false
     t.integer "artist_id", null: false
@@ -33,6 +33,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_064449) do
     t.datetime "created_at", null: false
     t.string "name"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "external_ids", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.integer "internal_id", null: false
+    t.string "internal_type", null: false
+    t.string "provider", null: false
+    t.datetime "updated_at", null: false
+    t.index ["internal_type", "internal_id", "provider"], name: "index_external_ids_on_internal_and_provider", unique: true
+    t.index ["internal_type", "internal_id"], name: "index_external_ids_on_internal"
+  end
+
+  create_table "oauth_tokens", force: :cascade do |t|
+    t.string "access_token", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "provider", null: false
+    t.string "refresh_token", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id", "provider"], name: "index_oauth_tokens_on_user_id_and_provider", unique: true
+    t.index ["user_id"], name: "index_oauth_tokens_on_user_id"
   end
 
   create_table "playlist_tracks", force: :cascade do |t|
@@ -90,6 +113,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_05_064449) do
 
   add_foreign_key "album_artists", "albums"
   add_foreign_key "album_artists", "artists"
+  add_foreign_key "oauth_tokens", "users"
   add_foreign_key "playlist_tracks", "playlists"
   add_foreign_key "playlist_tracks", "tracks"
   add_foreign_key "sessions", "users"
