@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get "oauth/spotify/authorise", to: "oauth#authorise_spotify"
+  get "oauth/spotify/callback",  to: "oauth#callback_spotify"
   resource :session
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

@@ -24,6 +24,10 @@ active_record_encryption:
   primary_key: <your_generated_primary_key>
   deterministic_key: <your_generated_deterministic_key>
   key_derivation_salt: <your_generated_salt>
+
+spotify:
+  client_id: your_client_id_here
+  client_secret: your_client_secret_here
 ```
 
 ### Database
