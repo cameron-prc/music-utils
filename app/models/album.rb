@@ -1,4 +1,6 @@
 class Album < ApplicationRecord
+  include ExternallyIdentifiable
+
   has_many :external_ids, as: :internal, dependent: :destroy
   has_many :album_artists
   has_many :artists, through: :album_artists
