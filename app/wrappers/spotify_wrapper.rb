@@ -9,7 +9,8 @@ class SpotifyWrapper
     response_items = response[:items][:items]
 
     spotify_artist_ids = response_items.flat_map do |item|
-      item[:item][:artists].map { |a| a[:id] } + item[:item][:album][:artists].map { |a| a[:id] }
+      track_data = item[:item]
+      track_data[:artists].map { |artist| artist[:id] } + track_data[:album][:artists].map { |artist| artist[:id] }
     end
     spotify_track_ids  = response_items.map { |item| item[:item][:id] }
     spotify_album_ids  = response_items.map { |item| item[:item][:album][:id] }
@@ -29,26 +30,25 @@ class SpotifyWrapper
       .includes(:external_ids)
       .index_by { |a| a.external_ids.find(&:spotify?).external_id }
 
-    playlist_tracks = response_items.each_with_index.map do |item, position|
-      album_data = item[:item][:album]
-      album_artists = album_data[:artists].each_with_index.map do |artist_data, i|
+    playlist_tracks = response_items.map.with_index do |item, position|
+      track_data = item[:item]
+      album_data = track_data[:album]
+
+      album_artists = album_data[:artists].map.with_index do |artist_data, i|
         artist = known_artists[artist_data[:id]] || build_artist(artist_data)
         AlbumArtist.new(artist: artist, position: i)
       end
 
-      album = known_albums[album_data[:id]] || build_album(album_data).tap do |a|
-        a.album_artists = album_artists
+      album = known_albums[album_data[:id]] || build_album(album_data).tap do |album|
+        album.album_artists = album_artists
       end
 
-      track_artists = item[:item][:artists].each_with_index.map do |artist_data, i|
-       # puts artist_data
+      track_artists = track_data[:artists].map.with_index do |artist_data, i|
         artist = known_artists[artist_data[:id]] || build_artist(artist_data)
-        #puts artist.inspect
         TrackArtist.new(artist: artist, position: i)
       end
-      puts track_artists.inspect
 
-      track = known_tracks[item[:item][:id]] || build_track(item[:item], album: album).tap do |t|
+      track = known_tracks[track_data[:id]] || build_track(track_data, album: album).tap do |t|
         t.track_artists = track_artists
       end
 
