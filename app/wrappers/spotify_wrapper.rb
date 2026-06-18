@@ -1,19 +1,20 @@
 class SpotifyWrapper
+  SEARCH_FIELDS = "name, items.items(item.id, item.name, item.album(id,name,release_date,total_tracks,artists(id,name)), item.artists(id,name))".freeze
+
   def initialize(user)
     @client = SpotifyClient.new(user)
   end
 
   def get_playlist(id)
-    search_fields = "name, items.items(item.id, item.name, item.album(id,name,release_date,artists(id,name)), item.artists(id,name))"
-    response = @client.playlists.find(id, params: { fields: search_fields })
+    response = @client.playlists.find(id, params: { fields: SEARCH_FIELDS })
     response_items = response[:items][:items]
 
+    spotify_track_ids  = response_items.map { |item| item[:item][:id] }
+    spotify_album_ids  = response_items.map { |item| item[:item][:album][:id] }
     spotify_artist_ids = response_items.flat_map do |item|
       track_data = item[:item]
       track_data[:artists].map { |artist| artist[:id] } + track_data[:album][:artists].map { |artist| artist[:id] }
     end
-    spotify_track_ids  = response_items.map { |item| item[:item][:id] }
-    spotify_album_ids  = response_items.map { |item| item[:item][:album][:id] }
 
     known_artists = Artist
       .with_external_id(Providers::SPOTIFY, spotify_artist_ids)
@@ -69,7 +70,7 @@ class SpotifyWrapper
   end
 
   def build_album(data)
-    Album.new(title: data[:name], release_date: data[:release_date]).tap do |album|
+    Album.new(title: data[:name], release_date: data[:release_date], total_tracks: data[:total_tracks]).tap do |album|
       album.external_ids.build(provider: Providers::SPOTIFY, external_id: data[:id])
     end
   end
