@@ -4,12 +4,15 @@ class SpotifyWrapper
   end
 
   def get_playlist(id)
-    search_fields = "name, items.items(item.id, item.name, item.album(id,name,release_date), item.artists(id,name))"
+    search_fields = "name, items.items(item.id, item.name, item.album(id,name,release_date,artists(id,name)), item.artists(id,name))"
     response = @client.playlists.find(id, params: { fields: search_fields })
+    response_items = response[:items][:items]
 
-    spotify_artist_ids = response[:items].flat_map { |item| item[:artists] }.map { |a| a[:id] }
-    spotify_track_ids  = response[:items].map { |item| item[:id] }
-    spotify_album_ids  = response[:items].map { |item| item[:album][:id] }
+    spotify_artist_ids = response_items.flat_map do |item|
+      item[:item][:artists].map { |a| a[:id] } + item[:item][:album][:artists].map { |a| a[:id] }
+    end
+    spotify_track_ids  = response_items.map { |item| item[:item][:id] }
+    spotify_album_ids  = response_items.map { |item| item[:item][:album][:id] }
 
     known_artists = Artist
       .with_external_id(Providers::SPOTIFY, spotify_artist_ids)
@@ -26,16 +29,26 @@ class SpotifyWrapper
       .includes(:external_ids)
       .index_by { |a| a.external_ids.find(&:spotify?).external_id }
 
-    playlist_tracks = response[:items].each_with_index.map do |item, position|
-      album_data = item[:album]
-      album = known_albums[album_data[:id]] || build_album(album_data)
-
-      track_artists = item[:artists].each_with_index.map do |artist_data, i|
+    playlist_tracks = response_items.each_with_index.map do |item, position|
+      album_data = item[:item][:album]
+      album_artists = album_data[:artists].each_with_index.map do |artist_data, i|
         artist = known_artists[artist_data[:id]] || build_artist(artist_data)
-        TrackArtist.new(artist: artist, position: i)
+        AlbumArtist.new(artist: artist, position: i)
       end
 
-      track = known_tracks[item[:id]] || build_track(item, album: album).tap do |t|
+      album = known_albums[album_data[:id]] || build_album(album_data).tap do |a|
+        a.album_artists = album_artists
+      end
+
+      track_artists = item[:item][:artists].each_with_index.map do |artist_data, i|
+       # puts artist_data
+        artist = known_artists[artist_data[:id]] || build_artist(artist_data)
+        #puts artist.inspect
+        TrackArtist.new(artist: artist, position: i)
+      end
+      puts track_artists.inspect
+
+      track = known_tracks[item[:item][:id]] || build_track(item[:item], album: album).tap do |t|
         t.track_artists = track_artists
       end
 
