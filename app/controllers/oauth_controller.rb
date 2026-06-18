@@ -10,11 +10,11 @@ class OauthController < ApplicationController
       return
     end
 
-    if params[:errors].any?
+    if params[:errors]&.any?
       redirect_to root_path, alert: params[:errors]
     end
 
-    tokens = SpotifyClient::Authorisation.request_access(params[:code])
+    tokens = SpotifyClient::Authorisation.request_access_tokens(params[:code])
 
     Current.user.oauth_tokens.find_or_initialize_by(provider: Providers::SPOTIFY).tap do |token|
       token.update!(

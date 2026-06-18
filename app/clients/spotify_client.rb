@@ -5,7 +5,7 @@ class SpotifyClient
   BASE_URL = "https://api.spotify.com/v1"
 
   def initialize(user)
-    oauth_token = user.oauth_tokens.find_by!(provider: Provider)
+    oauth_token = user.oauth_tokens.find_by!(provider: Providers::SPOTIFY)
     @token      = SpotifyClient::Token.new(oauth_token)
     @token.access_token
   end
@@ -44,6 +44,6 @@ class SpotifyClient
       req.body             = body.to_json
     end
 
-    Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| JSON.parse(http.request(req).body) }
+    Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| JSON.parse(http.request(req).body, symbolize_names: true) }
   end
 end

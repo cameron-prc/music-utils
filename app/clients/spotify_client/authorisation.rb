@@ -28,18 +28,18 @@ class SpotifyClient::Authorisation
       "#{AUTH_URL}?#{URI.encode_www_form(params)}"
     end
 
-    def request_access_token(code)
+    def request_access_tokens(code)
       body = post_token(grant_type: "authorization_code", code: code, redirect_uri: credentials.redirect_uri)
       {
-        access_token:  body["access_token"],
-        refresh_token: body["refresh_token"],
-        expires_in:    body["expires_in"]
+        access_token:  body[:access_token],
+        refresh_token: body[:refresh_token],
+        expires_in:    body[:expires_in]
       }
     end
 
     def refresh!(oauth_token)
       body = post_token(grant_type: "refresh_token", refresh_token: oauth_token.refresh_token)
-      oauth_token.update!(access_token: body["access_token"], expires_at: Time.now + body["expires_in"])
+      oauth_token.update!(access_token: body[:access_token], expires_at: Time.now + body[:expires_in])
     end
 
     private
@@ -49,7 +49,7 @@ class SpotifyClient::Authorisation
       request = Net::HTTP::Post.new(uri)
       request["Authorization"] = "Basic #{Base64.strict_encode64("#{credentials.client_id}:#{credentials.client_secret}")}"
       request.set_form_data(params)
-      Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| JSON.parse(http.request(request).body) }
+      Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| JSON.parse(http.request(request).body, symbolize_names: true) }
     end
   end
 end
