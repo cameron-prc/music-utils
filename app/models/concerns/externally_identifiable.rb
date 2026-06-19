@@ -12,4 +12,8 @@ module ExternallyIdentifiable
       with_external_id(provider, external_id).first
     end
   end
+
+  def external_id_for(provider)
+    external_ids.find_by(provider: provider)&.external_id
+  end
 end

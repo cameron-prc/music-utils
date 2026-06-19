@@ -7,6 +7,6 @@ class SpotifyClient::Profile
   end
 
   def me
-    @request.call(:get, "/me")
+    @request.call(:get, "/v1/me")
   end
 end

@@ -4,6 +4,6 @@ class SpotifyClient::Tracks
   end
 
   def find(id, params: nil)
-    @request.call(:get, "/tracks/#{id}", params: params)
+    @request.call(:get, "/v1/tracks/#{id}", params: params)
   end
 end

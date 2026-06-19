@@ -2,7 +2,7 @@ require "net/http"
 require "json"
 
 class SpotifyClient
-  BASE_URL = "https://api.spotify.com/v1"
+  BASE_URL = "https://api.spotify.com"
 
   def initialize(user)
     oauth_token = user.oauth_tokens.find_by!(provider: Providers::SPOTIFY)
@@ -36,6 +36,8 @@ class SpotifyClient
     uri       = URI("#{BASE_URL}#{path}")
     uri.query = URI.encode_www_form(params) if params
 
+    puts uri.query
+    puts uri.inspect
     req = Net::HTTP.const_get(http_method.to_s.capitalize).new(uri)
     req["Authorization"] = "Bearer #{@token.access_token}"
 
