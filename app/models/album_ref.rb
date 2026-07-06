@@ -1,0 +1,2 @@
+class AlbumRef < Album
+end

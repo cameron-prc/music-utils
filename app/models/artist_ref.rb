@@ -1,0 +1,2 @@
+class ArtistRef < Artist
+end
