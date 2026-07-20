@@ -8,7 +8,7 @@ module ExternallyIdentifiable
   end
 
   class_methods do
-    def find_by_external_id(provider:, external_id:)
+    def find_by_external_id(provider, external_id)
       with_external_id(provider, external_id).first
     end
   end
