@@ -42,9 +42,21 @@ class SpotifyWrapper
     end
   end
 
+  def find_track(title:, artist:, album:)
+    query = ["track:#{title}", ("artist:#{artist}" if artist), ("album:#{album}" if album)].compact.join(" ")
+    response = @client.tracks.search(query)
+    tracks = response.dig(:tracks, :items) || []
+
+    tracks.find { |t| matches?(t[:name], title) }&.dig(:id)
+  end
+
   private
 
   def build_artist(data)
     ExternalArtistRef.new(Providers::SPOTIFY, data[:id], data[:name])
+  end
+
+  def matches?(candidate, target)
+    candidate&.downcase == target&.downcase
   end
 end
