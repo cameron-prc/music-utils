@@ -1,7 +1,8 @@
 module Playlists
   class Hydrate
     WRAPPERS = {
-      Providers::SPOTIFY => SpotifyWrapper
+      Providers::SPOTIFY => SpotifyWrapper,
+      Providers::YOUTUBE => YoutubeWrapper
     }
 
     def initialize(user, playlist_id, provider)

@@ -1,7 +1,8 @@
 module Playlists
   class Import
     WRAPPERS = {
-      Providers::SPOTIFY => SpotifyWrapper
+      Providers::SPOTIFY => SpotifyWrapper,
+      Providers::YOUTUBE => YoutubeWrapper
     }
 
     def initialize(user, playlist_id, provider)
