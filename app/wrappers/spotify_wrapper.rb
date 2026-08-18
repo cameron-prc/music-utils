@@ -12,17 +12,19 @@ class SpotifyWrapper
 
     playlist = ExternalPlaylist.new(Providers::SPOTIFY, playlist_details[:id], playlist_details[:name])
 
-    loop.with_index do |index|
+    loop do
       playlist.tracks.concat(process_tracks_page(tracks_page[:items]))
-      
+
       break unless tracks_page[:next]
-      
+
       tracks_page = @client.playlists.next(tracks_page[:next])
     end
+
+    playlist
   end
 
   def process_tracks_page(items)
-    items.map.with do |item|
+    items.map do |item|
       track_data = item[:item]
       album_data = track_data[:album]
 

@@ -36,8 +36,8 @@ class SpotifyClient
     uri       = URI("#{BASE_URL}#{path}")
     uri.query = URI.encode_www_form(params) if params
 
-    puts uri.query
-    puts uri.inspect
+    Rails.logger.debug "Spotify request: #{http_method.upcase} #{uri}"
+
     req = Net::HTTP.const_get(http_method.to_s.capitalize).new(uri)
     req["Authorization"] = "Bearer #{@token.access_token}"
 
@@ -46,6 +46,13 @@ class SpotifyClient
       req.body             = body.to_json
     end
 
-    Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| JSON.parse(http.request(req).body, symbolize_names: true) }
+    response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(req) }
+
+    unless response.is_a?(Net::HTTPSuccess)
+      Rails.logger.error "Spotify API error: #{response.code} #{response.message} — #{response.body}"
+      raise "Spotify API error: #{response.code} #{response.message}"
+    end
+
+    JSON.parse(response.body, symbolize_names: true)
   end
 end

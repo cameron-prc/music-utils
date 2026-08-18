@@ -49,7 +49,7 @@ class Playlists::ImportTest < ActiveSupport::TestCase
     track1 = build(:external_track, name: "Track 1", album_ref: album, provider: Providers::SPOTIFY, artist_refs: [artist1, artist2])
     track2 = build(:external_track, name: "Track 2", album_ref: album, provider: Providers::SPOTIFY, artist_refs: [artist1, artist2, artist3])
 
-    build(:external_playlist, name: name, source: Providers::SPOTIFY, id: @playlist_id).tap do |external_playlist|
+    build(:external_playlist, name: name, provider: Providers::SPOTIFY, id: @playlist_id).tap do |external_playlist|
       external_playlist.tracks = [track1, track2]
     end
   end

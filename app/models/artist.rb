@@ -6,6 +6,6 @@ class Artist < ApplicationRecord
   has_many :tracks, through: :track_artists
 
   def externally_known_to
-    external_ids?.map { |external_id| external_id.provider }
+    external_ids.pluck(:provider)
   end
 end

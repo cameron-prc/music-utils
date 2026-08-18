@@ -16,31 +16,33 @@ module Playlists
     def call
       external_playlist = wrapper.get_playlist(@playlist_id)
 
-      track_ids  = external_playlist.tracks.map(&:id).uniq!
-      album_ids  = external_playlist.tracks.map { |track| track.album_ref.id }.uniq!
+      track_ids  = external_playlist.tracks.map(&:id).uniq
+      album_ids  = external_playlist.tracks.map { |track| track.album_ref.id }.uniq
       artist_ids = external_playlist.tracks.flat_map do |track|
         track.artist_refs.map{ |artist| artist.id }.concat(track.album_ref.artist_refs.map { |artist| artist.id})
-      end.uniq!
+      end.uniq
 
       @known_artists = Artist.with_external_id(@provider, artist_ids).includes(:external_ids).to_a
       @known_albums  = Album.with_external_id(@provider, album_ids).includes(:external_ids).to_a
       @known_tracks  = Track.with_external_id(@provider, track_ids).includes(:external_ids).to_a
 
-      @playlist = find_or_create_playlist(external_playlist)
+      ActiveRecord::Base.transaction do
+        @playlist = find_or_create_playlist(external_playlist)
 
-      if @playlist.name != external_playlist.name
-        puts "updating playlist name from '#{@playlist.name}' to '#{external_playlist.name}'"
-        @playlist.name = external_playlist.name
+        if @playlist.name != external_playlist.name
+          Rails.logger.info "updating playlist name from '#{@playlist.name}' to '#{external_playlist.name}'"
+          @playlist.name = external_playlist.name
+        end
+
+        @playlist.clear
+
+        external_playlist.tracks.each do |external_track|
+          track = find_or_create_track(external_track)
+          @playlist.add(track)
+        end
+
+        @playlist.save!
       end
-
-      @playlist.clear
-
-      external_playlist.tracks.each do |external_track|
-        track = find_or_create_track(external_track) 
-        @playlist.add(track)
-      end
-
-      @playlist.save!
     end
 
     private
@@ -50,7 +52,7 @@ module Playlists
 
       return existing_playlist if existing_playlist
 
-      puts "building new playlist with id #{external_playlist.id}"
+      Rails.logger.info "building new playlist with id #{external_playlist.id}"
       new_playlist = Playlist.new(name: external_playlist.name)
       new_playlist.external_ids << ExternalId.new(provider: Providers::SPOTIFY, external_id: external_playlist.id)
 
@@ -100,7 +102,7 @@ module Playlists
 
 
     def find_in(collection, provider, external_id)
-      collection.find { |r| r.external_ids.detect { |e| e[:provider] == provider && e.external_id == external_id } }
+      collection.find { |r| r.external_ids.detect { |e| e.provider == provider && e.external_id == external_id } }
     end
 
     def wrapper

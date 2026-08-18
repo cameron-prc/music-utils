@@ -7,7 +7,7 @@ class Playlist < ApplicationRecord
 
   def add(track)
     playlist_tracks << PlaylistTrack.new(playlist: self, track: track, position: playlist_tracks.size + 1)
-    puts "adding " + track.title
+    Rails.logger.info "adding #{track.title}"
   end
 
   def clear()
